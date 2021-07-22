@@ -7,7 +7,7 @@ timeout = 300
 bind = "127.0.0.1:8010"
 pythonpath = "/edx/app/edxapp/edx-platform"
 max_requests = 50
-workers = 7
+workers = 2
 
 
 def pre_request(worker, req):

@@ -215,7 +215,7 @@ services:
     build:
       context: ./edxapp
       target: studio-dev
-    command: python /edx/app/edxapp/edx-platform/manage.py lms runserver 0.0.0.0:8000 --settings devstack_docker
+    command: python /edx/app/edxapp/edx-platform/manage.py cms runserver 0.0.0.0:8000 --settings devstack_docker
     container_name: "edx.vn.cms"
     hostname: studio.devstack.edx
     depends_on:
