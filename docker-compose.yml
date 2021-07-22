@@ -68,8 +68,11 @@ services:
     container_name: "edx.vn.mongo"
     hostname: mongo.devstack.edx
     image: mongo:${MONGO_VERSION:-4.0.22}
-    # ports:
-    #  - "27017:27017"
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: edxapp
+      MONGO_INITDB_ROOT_PASSWORD: password
     networks:
       default:
         aliases:
@@ -141,6 +144,8 @@ services:
       - discovery
       - forum
       - elasticsearch7
+    ports:
+      - "8072:8000"
     networks:
       default:
         aliases:
@@ -151,7 +156,7 @@ services:
     build:
       context: ./edxapp
       target: lms-dev
-    command: bash -c 'source /edx/app/edxapp/.venv/bin/activate && while true; do python /edx/app/edxapp/edx-platform/manage.py lms runserver 0.0.0.0:8000 --settings devstack_docker; sleep 2; done'
+    command: python /edx/app/edxapp/edx-platform/manage.py lms runserver 0.0.0.0:8000 --settings devstack_docker
     container_name: "edx.vn.lms"
     hostname: lms.devstack.edx
     depends_on:
@@ -172,8 +177,8 @@ services:
       EDXAPP_TEST_MONGO_HOST: edx.devstack.mongo
       NO_PYTHON_UNINSTALL: 1
       DJANGO_WATCHMAN_TIMEOUT: 30
-    volumes:
-      - ./edxapp/edx-platform:/edx/app/edxapp/edx-platform
+    # volumes:
+    #   - ./edxapp/edx-platform:/edx/app/edxapp/edx-platform
     ports:
       - "8072:8000"
     networks:
@@ -198,6 +203,8 @@ services:
       - discovery
       - forum
       - elasticsearch7
+    ports:
+      - "8082:8000"
     networks:
       default:
         aliases:
@@ -208,7 +215,7 @@ services:
     build:
       context: ./edxapp
       target: studio-dev
-    command: bash -c 'source /edx/app/edxapp/.venv/bin/activate && while true; do python /edx/app/edxapp/edx-platform/manage.py cms runserver 0.0.0.0:8000 --settings devstack_docker; sleep 2; done'
+    command: python /edx/app/edxapp/edx-platform/manage.py lms runserver 0.0.0.0:8000 --settings devstack_docker
     container_name: "edx.vn.cms"
     hostname: studio.devstack.edx
     depends_on:
@@ -219,6 +226,7 @@ services:
       - discovery
       - forum
       - elasticsearch7
+      - lms-dev
     # Allows attachment to the LMS service using 'docker attach <containerID>'.
     stdin_open: true
     tty: true
@@ -229,8 +237,8 @@ services:
       EDXAPP_TEST_MONGO_HOST: edx.devstack.mongo
       NO_PYTHON_UNINSTALL: 1
       DJANGO_WATCHMAN_TIMEOUT: 30
-    volumes:
-      - ./edxapp/edx-platform:/edx/app/edxapp/edx-platform
+    # volumes:
+    #   - ./edxapp/edx-platform:/edx/app/edxapp/edx-platform
     ports:
       - "8082:8000"
     networks:
@@ -265,8 +273,9 @@ services:
 
   nginx:
     build:
-      context: ./nginx
-    image: "${EDXAPP_NGINX_IMAGE_NAME:-edxapp-nginx}:${EDXAPP_IMAGE_TAG:-ironwood}"
+      context: ./edxapp
+      target: nginx
+    image: "${EDXAPP_NGINX_IMAGE_NAME:-edxapp-nginx}:${EDXAPP_IMAGE_TAG:-lilac}"
     ports:
       - "8073:8073"
       - "8083:8083"
@@ -275,12 +284,9 @@ services:
       default:
         aliases:
           - nginx
-      outside:
-        aliases:
-          - edx
     volumes:
-      - ./docker/files/etc/nginx/${NGINX_CONF:-conf.d}:/etc/nginx/conf.d:ro
-      - ./${FLAVORED_EDX_RELEASE_PATH:-build}/data/media:/data/media:ro
+      - ./edxapp/nginx/${NGINX_CONF:-conf.d}:/etc/nginx/conf.d:ro
+      - ./data/media:/data/media:ro
     depends_on:
       - lms
       - cms

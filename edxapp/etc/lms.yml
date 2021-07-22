@@ -183,7 +183,7 @@ DATABASES:
         OPTIONS: {}
         PASSWORD: password
         PORT: '3306'
-        USER: edxapp001
+        USER: edxapp
     read_replica:
         CONN_MAX_AGE: 0
         ENGINE: django.db.backends.mysql
@@ -192,7 +192,7 @@ DATABASES:
         OPTIONS: {}
         PASSWORD: password
         PORT: '3306'
-        USER: edxapp001
+        USER: edxapp
     student_module_history:
         CONN_MAX_AGE: 0
         ENGINE: django.db.backends.mysql
@@ -201,7 +201,7 @@ DATABASES:
         OPTIONS: {}
         PASSWORD: password
         PORT: '3306'
-        USER: edxapp001
+        USER: edxapp
 DATA_DIR: /edx/var/edxapp
 DEFAULT_COURSE_VISIBILITY_IN_CATALOG: both
 DEFAULT_FEEDBACK_EMAIL: feedback@example.com

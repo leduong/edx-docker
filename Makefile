@@ -27,7 +27,7 @@ COMPOSE          = \
 COMPOSE_SSL      = NGINX_CONF=ssl $(COMPOSE)
 COMPOSE_RUN      = $(COMPOSE) run --rm -e HOME="/tmp"
 COMPOSE_EXEC     = $(COMPOSE) exec
-WAIT_DB          = $(COMPOSE_RUN) dockerize -wait tcp://mysql:3306 -timeout 60s
+WAIT_DB          = $(COMPOSE_RUN) dockerize -wait tcp://mysql57:3306 -timeout 60s
 
 # Django
 MANAGE_CMS       = $(COMPOSE_EXEC) cms python manage.py cms
@@ -70,7 +70,7 @@ check-activate:
 	@if [[ -z "${EDX_RELEASE}" ]] ; then\
 		echo -e "${COLOR_INFO}You must activate ENV an OpenEdx release first. Copy/paste the text\n${COLOR_RESET}";\
 		echo -e "${COLOR_INFO}export EDX_RELEASE=\"lilac.1\"${COLOR_RESET}";\
-		echo -e "${COLOR_INFO}export FLAVOR=\"oee\"${COLOR_RESET}";\
+		echo -e "${COLOR_INFO}export FLAVOR=\"bare\"${COLOR_RESET}";\
 		echo -e "${COLOR_INFO}export EDX_RELEASE_REF=\"open-release/lilac.1\"${COLOR_RESET}";\
 		echo -e "${COLOR_INFO}export EDX_DEMO_RELEASE_REF=\"open-release/lilac.1\"${COLOR_RESET}";\
 		exit 1;\
@@ -224,7 +224,7 @@ migrate: \
   check-root-user
 migrate:  ## perform database migrations
 	@echo "Booting mysql service..."
-	$(COMPOSE) up -d mysql
+	$(COMPOSE) up -d mysql57
 	$(WAIT_DB)
 	$(COMPOSE_RUN) lms python manage.py lms migrate
 	$(COMPOSE_RUN) cms python manage.py cms migrate
@@ -263,7 +263,7 @@ stop:  ## stop the development servers
 superuser: \
   check-activate
 superuser: ## Create an admin user with password "admin"
-	@$(COMPOSE) up -d mysql
+	@$(COMPOSE) up -d mysql57
 	@echo "Wait for services to be up..."
 	@$(WAIT_DB)
 	$(COMPOSE_RUN) lms python manage.py lms createsuperuser
