@@ -149,7 +149,7 @@ FROM ${NGINX_IMAGE_NAME}:${NGINX_IMAGE_TAG} as nginx
 ARG EDXAPP_STATIC_ROOT
 RUN mkdir -p ${EDXAPP_STATIC_ROOT}
 
-COPY ./nginx/etc/conf.d/lms.conf /etc/nginx/conf.d/lms.conf
-COPY ./nginx/etc/conf.d/cms.conf /etc/nginx/conf.d/cms.conf
+COPY ./nginx/conf.d/lms.conf /etc/nginx/conf.d/lms.conf
+COPY ./nginx/conf.d/cms.conf /etc/nginx/conf.d/cms.conf
 
 # COPY --from=files_collector ${EDXAPP_STATIC_ROOT} ${EDXAPP_STATIC_ROOT}

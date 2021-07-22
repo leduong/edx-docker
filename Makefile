@@ -80,6 +80,7 @@ check-activate:
 bootstrap: \
   check-activate \
   stop \
+  initdb \
   build \
   dev-build \
   migrate \
@@ -259,6 +260,12 @@ run-ssl:  ## start the cms and lms services over TLS (nginx + production image)
 stop:  ## stop the development servers
 	$(COMPOSE) stop
 .PHONY: stop
+
+initdb:
+	$(COMPOSE) up -d mongo mysql57
+	$(COMPOSE) exec -T mongo bash -e -c "mongo" < ./data/mongo.js
+	$(COMPOSE) exec -T mysql57 mysql -uroot < ./data/provision.sql
+.PHONY: initdb
 
 superuser: \
   check-activate

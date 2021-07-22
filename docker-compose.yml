@@ -68,11 +68,8 @@ services:
     container_name: "edx.vn.mongo"
     hostname: mongo.devstack.edx
     image: mongo:${MONGO_VERSION:-4.0.22}
-    ports:
-      - "27017:27017"
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: edxapp
-      MONGO_INITDB_ROOT_PASSWORD: password
+    # ports:
+    #   - "27017:27017"
     networks:
       default:
         aliases:
@@ -298,14 +295,8 @@ services:
       - 9100:80
     environment:
       - PMA_ARBITRARY=1
-      - PMA_HOST=edx.devstack.mysql57
     depends_on:
       - mysql57
 
   dockerize:
     image: jwilder/dockerize
-
-networks:
-  outside:
-    driver: bridge
-    name: ${EDX_NETWORK:-edx_outside}
