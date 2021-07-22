@@ -62,6 +62,6 @@ coverage.xml
 docker/files/etc/nginx/ssl/*
 !docker/files/etc/nginx/ssl/ssl.conf.tpl
 # Config ENV
-data/
+data/*
 !data/provision.sql
 !data/mongo.js
