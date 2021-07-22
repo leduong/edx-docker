@@ -28,6 +28,7 @@ COMPOSE_SSL      = NGINX_CONF=ssl $(COMPOSE)
 COMPOSE_RUN      = $(COMPOSE) run --rm -e HOME="/tmp"
 COMPOSE_EXEC     = $(COMPOSE) exec
 WAIT_DB          = $(COMPOSE_RUN) dockerize -wait tcp://mysql57:3306 -timeout 60s
+WAIT_MG          = $(COMPOSE_RUN) dockerize -wait tcp://mongo:27017 -timeout 60s
 
 # Django
 MANAGE_CMS       = $(COMPOSE_EXEC) cms python manage.py cms
@@ -263,7 +264,9 @@ stop:  ## stop the development servers
 
 initdb:
 	$(COMPOSE) up -d mongo mysql57
+	@$(WAIT_MG)
 	$(COMPOSE) exec -T mongo bash -e -c "mongo" < ./data/mongo.js
+	@$(WAIT_DB)
 	$(COMPOSE) exec -T mysql57 mysql -uroot < ./data/provision.sql
 .PHONY: initdb
 
