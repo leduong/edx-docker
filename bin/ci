@@ -1,0 +1,189 @@
+#!/usr/bin/env bash
+
+set -eo pipefail
+
+# shellcheck source=bin/_config.sh
+source "$(dirname "${BASH_SOURCE[0]}")/_config.sh"
+
+# usage: display usage with the appropriate exit code
+#
+# usage: usage [EXIT_CODE]
+#
+#   EXIT_CODE: program exit code (default: 0)
+function usage(){
+
+    declare -i exit_code="${1:-0}"
+
+    echo "Usage: bin/ci COMMAND
+
+Available commands:
+
+  activate_path          display CIRCLE_TAG (or CIRCLE_JOB) release activate script path
+  checkpoint             skip release job if changes are not targeting the current release
+  get_changes            get a list of changed files in the current branch compared to master
+  update                 update the circle-ci config.yml file
+  check_configuration    check that the circle-ci config.yml reflect current changes
+"
+
+    # shellcheck disable=SC2086
+    exit ${exit_code}
+}
+
+# Get active release activation path given the CIRCLE_TAG or CIRCLE_JOB
+# environment variable. If both are defined the CIRCLE_TAG variable will
+# prevail.
+function activate_path(){
+
+  declare reference
+  declare release
+
+  reference=${CIRCLE_TAG:-${CIRCLE_JOB}}
+  if [[ -z ${reference} ]]; then
+    (>&2 echo "CIRCLE_TAG or CIRCLE_JOB environment variable should be defined!")
+    exit 20
+  fi
+
+  # We need to convert the reference (_e.g._ something like hawthorn.1-1.0.3 or dogwood.3-fun)
+  # to a flavored release path (e.g. something like hawthorn/1/bare or dogwood/3/fun for the
+  # later examples). In the following, we have a three-steps pipeline
+  # to do so: i. get the release name, number and optionally a flavor from the
+  # reference, ii. in case of empty release number and/or flavor, our sed
+  # substitution will generate duplicated slashes that should be fixed, and
+  # iii.  the default flavor (empty third group from our regular expression)
+  # should be named "bare".
+  release=$(\
+    echo "${reference}" | \
+    sed -E 's|^([a-z]*)\.?([0-9]*)-?([a-z]*)?(-[0-9.]+)?$|\1/\2/\3|g' | \
+    sed -E 's|//|/|g' | \
+    sed -E 's|/$|/bare|g'
+  )
+
+  echo "releases/${release}/activate"
+}
+
+# Skip release job if changes are not targeting the current release
+function checkpoint(){
+
+  changes=$(get_changes)
+
+  if echo "${changes}" | grep -v "releases/" > /dev/null ; then
+    (>&2 echo "Current work scope is global, all releases should build.")
+    exit 0
+  fi
+
+  release_path=$(activate_path | sed -E 's|/activate$||')
+
+  if ! echo "${changes}" | grep "${release_path}" > /dev/null ; then
+    (>&2 echo "Skipping release (out of scope).")
+    circleci-agent step halt
+  fi
+}
+
+# Get a list of changed files in the current branch
+function get_changes() {
+  git whatchanged --name-only --pretty="" "origin/master..HEAD" | sort -u
+}
+
+
+function check_changes() {
+  to="${CIRCLE_SHA1:-HEAD}"
+  git whatchanged --name-only --pretty="" origin/master.."${to}" | grep "${1}" &> /dev/null
+}
+
+
+# Utility function that updates circle configuration source files with a
+# workflow for each site and running only the necessary jobs
+#
+# Usage: update_sources
+function update_sources() {
+
+    # Add a workflow for the release from our template
+    echo "" > ".circleci/src/workflows/edxapp/@jobs.yml"
+    echo "" > ".circleci/src/jobs/@jobs.yml"
+
+    while IFS= read -r -d '' release_path
+    do
+        # Extract release name from path
+        release="${release_path//${RELEASES_DIRECTORY}\//}"
+        # Replace first slash of release name with a . and second slash with a -
+        release=$(echo ${release} | sed 's/\//\./' | sed 's/\//-/')
+
+        # Conditions to run a release's workflow
+        if \
+            check_changes "^docker/$" || \
+            check_changes "^${release_path}/config/" || \
+            check_changes "^${release_path}/activate" || \
+            check_changes "^${release_path}/Dockerfile" || \
+            check_changes "^${release_path}/requirements.txt" \
+            check_changes "^${release_path}/entrypoint.sh"
+        then
+            workflow_template=".circleci/src/workflows/edxapp/release_jobs.yml.tpl"
+            job_template=".circleci/src/jobs/release.yml.tpl"
+        else
+            workflow_template=".circleci/src/workflows/edxapp/release_no_change.yml.tpl"
+            job_template=".circleci/src/jobs/release_no_change.yml.tpl"
+        fi
+
+        # shellcheck disable=SC2016
+        sed 's|${RELEASE}|'"${release}"'|g;' < "${workflow_template}" >> ".circleci/src/workflows/edxapp/@jobs.yml"
+        sed 's|${RELEASE}|'"${release}"'|g;' < "${job_template}" >> ".circleci/src/jobs/@jobs.yml"
+
+    done <  <(find "releases" -maxdepth 3 -mindepth 3 -type d -print0 | sort -z)
+
+    # Replace in config.tpl
+    sed -e '/${WORKFLOW_JOBS_LIST}/ {' -e 'r .circleci/src/workflows/edxapp/@jobs.yml' -e 'd' -e '}' .circleci/src/config.tpl > .circleci/config.yml.part1
+    sed -e '/${JOBS_LIST}/ {' -e 'r .circleci/src/jobs/@jobs.yml' -e 'd' -e '}' .circleci/config.yml.part1 > .circleci/config.yml.part2
+    echo -e "# THIS FILE WAS AUTOMATICALLY GENERATED.\n# Please edit src/config.tpl file instead.\n\n" > .circleci/config.yml
+    cat .circleci/config.yml.part2 >> .circleci/config.yml
+    rm .circleci/config.yml.part1
+    rm .circleci/config.yml.part2
+}
+
+
+# Utility function that generates a circle configuration file with a workflow
+# for each site and running only the necessary jobs
+#
+# Usage: update
+function update() {
+    update_sources
+
+    # Check config validity
+    docker run --rm -v "${PROJECT_DIRECTORY}:/data" circleci/circleci-cli:alpine \
+        config validate /data/.circleci/config.yml
+}
+
+
+# Utility function that checks if the circle configuration committed to git
+# corresponds to the state of the project so that the workflows and jobs are
+# run according to what has changed as compared to the "master" branch.
+#
+# Usage: check_configuration
+function check_configuration() {
+    update
+    if git diff --name-only | grep "^.circleci/"; then
+        echo "check: the .circleci configuration does not reflect latest changes."
+        exit 1
+    fi
+    echo "All good"
+    exit 0
+}
+
+
+# ---- Main ----
+
+# Check if this script is being sourced or executed. Explanation: Bash allows
+# return statements only from functions and, in a script's top-level scope, only
+# if the script is sourced.
+(return 2> /dev/null) && sourced=1 || sourced=0
+
+if [[ ${sourced} == 0 ]]; then
+
+    action="${1:-usage}"
+
+    # Remove current action from arguments array
+    if [[ -n "${1}" ]]; then
+        shift
+    fi
+
+    "$action" "$@"
+fi

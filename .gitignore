@@ -1,0 +1,65 @@
+# env
+.env
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+
+# Site media
+build/data/
+
+# Sources
+build/edx-demo-course
+
+# Unit test / coverage reports
+htmlcov/
+.coverage
+.cache
+nosetests.xml
+coverage.xml
+
+# Translations
+*.mo
+
+# Vagrant
+.vagrant
+
+# PyCharm IDE
+.idea/
+
+# Mr Developer
+.mr.developer.cfg
+.project
+.pydevproject
+
+# Eclipse
+.settings/
+
+# Rope
+.ropeproject
+
+# Sublime-Text:
+/*.sublime-project
+/*.sublime-workspace
+
+# TextMate 2
+.tm_properties
+
+# VS Code
+.vscode
+
+# Mac Os
+.DS_Store
+
+# Temp files
+*~
+.~lock*
+
+# Swap files
+*.sw[po]
+
+# Development nginx conf
+docker/files/etc/nginx/ssl/*
+!docker/files/etc/nginx/ssl/ssl.conf.tpl
+# Config ENV
+data/
