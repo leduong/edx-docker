@@ -1,4 +1,4 @@
-ARG EDXAPP_STATIC_ROOT=/edx/app/edxapp/staticfiles
+ARG EDXAPP_STATIC_ROOT=/edx/var/edxapp/staticfiles
 ARG NGINX_IMAGE_NAME=leduong/openedx-nginx
 ARG NGINX_IMAGE_TAG=1.13
 
@@ -107,6 +107,10 @@ RUN bash -c "source /edx/app/edxapp/.venv/bin/activate && \
     pip install --no-cache-dir -r requirements/edx/testing.txt && \
     pip install --no-cache-dir -r requirements/edx/development.txt"
 
+RUN mkdir -p test_root/log
+ENV DJANGO_SETTINGS_MODULE ""
+RUN NO_PREREQ_INSTALL=1 paver update_assets lms --settings devstack_decentralized
+
 ENTRYPOINT [ "/usr/local/bin/entrypoint.sh" ]
 
 
@@ -114,18 +118,12 @@ FROM development as lms-dev
 # TODO: This compiles static assets.
 # However, it's a bit of a hack, it's slow, and it's inefficient because makes the final Docker cache layer very large.
 # We ought to be able to this higher up in the Dockerfile, and do it the same for Prod and Devstack.
-RUN mkdir -p test_root/log
-ENV DJANGO_SETTINGS_MODULE ""
-RUN NO_PREREQ_INSTALL=1 paver update_assets lms --settings devstack_decentralized
 ENV DJANGO_SETTINGS_MODULE lms.envs.devstack_decentralized
 
 FROM development as studio-dev
 # TODO: This compiles static assets.
 # However, it's a bit of a hack, it's slow, and it's inefficient because makes the final Docker cache layer very large.
 # We ought to be able to this higher up in the Dockerfile, and do it the same for Prod and Devstack.
-RUN mkdir -p test_root/log
-ENV DJANGO_SETTINGS_MODULE ""
-RUN NO_PREREQ_INSTALL=1 paver update_assets cms --settings devstack_decentralized
 ENV DJANGO_SETTINGS_MODULE cms.envs.devstack_decentralized
 
 # === PRODUCTION ===
@@ -134,6 +132,7 @@ ARG EDXAPP_STATIC_ROOT
 ENV SERVICE_VARIANT lms
 ENV DJANGO_SETTINGS_MODULE lms.envs.production
 EXPOSE 8000
+COPY --from=development ${EDXAPP_STATIC_ROOT} ${EDXAPP_STATIC_ROOT}
 CMD gunicorn -c /edx/app/edxapp/edx-platform/lms/docker_lms_gunicorn.py --name lms --bind=0.0.0.0:8000 --max-requests=1000 --access-logfile - lms.wsgi:application
 
 FROM base as studio
@@ -141,6 +140,7 @@ ARG EDXAPP_STATIC_ROOT
 ENV SERVICE_VARIANT cms
 ENV DJANGO_SETTINGS_MODULE cms.envs.production
 EXPOSE 8000
+COPY --from=development ${EDXAPP_STATIC_ROOT} ${EDXAPP_STATIC_ROOT}
 CMD gunicorn -c /edx/app/edxapp/edx-platform/cms/docker_cms_gunicorn.py --name cms --bind=0.0.0.0:8000 --max-requests=1000 --access-logfile - cms.wsgi:application
 
 
@@ -152,4 +152,4 @@ RUN mkdir -p ${EDXAPP_STATIC_ROOT}
 COPY ./nginx/conf.d/lms.conf /etc/nginx/conf.d/lms.conf
 COPY ./nginx/conf.d/cms.conf /etc/nginx/conf.d/cms.conf
 
-# COPY --from=files_collector ${EDXAPP_STATIC_ROOT} ${EDXAPP_STATIC_ROOT}
+COPY --from=development ${EDXAPP_STATIC_ROOT} ${EDXAPP_STATIC_ROOT}
