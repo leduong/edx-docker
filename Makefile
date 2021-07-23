@@ -81,6 +81,8 @@ check-activate:
 bootstrap: \
   check-activate \
   stop \
+  clean \
+  clean-db \
   initdb \
   build \
   dev-build \
@@ -261,6 +263,20 @@ run-ssl:  ## start the cms and lms services over TLS (nginx + production image)
 stop:  ## stop the development servers
 	$(COMPOSE) stop
 .PHONY: stop
+
+clean: \
+  check-activate \
+  check-root-user
+clean:  ## remove downloaded sources
+	rm -r ./data/mysql57 ./data/mongo || exit 0
+.PHONY: clean
+
+clean-db: \
+  check-activate \
+  stop
+clean-db:  ## Remove mongo, mysql databases
+	$(COMPOSE) rm mongo mysql57
+.PHONY: clean-db
 
 initdb:
 	$(COMPOSE) up -d mongo mysql57
