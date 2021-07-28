@@ -109,7 +109,7 @@ RUN bash -c "source /edx/app/edxapp/.venv/bin/activate && \
 
 RUN mkdir -p test_root/log
 ENV DJANGO_SETTINGS_MODULE ""
-RUN NO_PREREQ_INSTALL=1 paver update_assets lms --settings devstack_decentralized
+RUN NO_PREREQ_INSTALL=1 paver update_assets lms --settings production
 
 ENTRYPOINT [ "/usr/local/bin/entrypoint.sh" ]
 

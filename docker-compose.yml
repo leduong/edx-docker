@@ -141,6 +141,8 @@ services:
       - discovery
       - forum
       - elasticsearch7
+    ports:
+      - "8072:8000"
     networks:
       default:
         aliases:
