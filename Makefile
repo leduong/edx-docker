@@ -82,7 +82,6 @@ bootstrap: \
   check-activate \
   stop \
   clean \
-  clean-db \
   initdb \
   build \
   dev-build \
@@ -157,8 +156,7 @@ dev-build:  ## build the edxapp production image
 # them.
 dev-install: \
   check-activate \
-  check-root-user \
-  src/edx-platform/requirements/edx/local.in
+  check-root-user
 dev-install:  ## re-install local libs in mounted sources
 	$(COMPOSE_RUN) --no-deps lms-dev \
 	  pip install -r requirements/edx/local.in
@@ -171,7 +169,7 @@ dev-watch: \
   check-root-user
 dev-watch:  ## Start assets watcher (front-end development)
 	$(COMPOSE_EXEC) lms-dev \
-	  paver watch_assets --settings=fun.docker_build_development
+	  paver watch_assets --settings=devstack_decentralized
 .PHONY: dev-watch
 
 # You can force archive download with the -B option:
@@ -243,8 +241,8 @@ run:  ## start the cms and lms services (nginx + production image)
 	$(WAIT_DB)
 	$(COMPOSE_RUN) dockerize -wait tcp://cms:8000 -timeout 60s
 	$(COMPOSE_RUN) dockerize -wait tcp://lms:8000 -timeout 60s
-	$(COMPOSE_RUN) dockerize -wait tcp://nginx:8073 -timeout 60s
-	$(COMPOSE_RUN) dockerize -wait tcp://nginx:8083 -timeout 60s
+	$(COMPOSE_RUN) dockerize -wait tcp://nginx:18000 -timeout 60s
+	$(COMPOSE_RUN) dockerize -wait tcp://nginx:18010 -timeout 60s
 .PHONY: run
 
 run-ssl: \
@@ -256,8 +254,8 @@ run-ssl:  ## start the cms and lms services over TLS (nginx + production image)
 	$(WAIT_DB)
 	$(COMPOSE_RUN) dockerize -wait tcp://cms:8000 -timeout 60s
 	$(COMPOSE_RUN) dockerize -wait tcp://lms:8000 -timeout 60s
-	$(COMPOSE_RUN) dockerize -wait tcp://nginx:8073 -timeout 60s
-	$(COMPOSE_RUN) dockerize -wait tcp://nginx:8083 -timeout 60s
+	$(COMPOSE_RUN) dockerize -wait tcp://nginx:18000 -timeout 60s
+	$(COMPOSE_RUN) dockerize -wait tcp://nginx:18010 -timeout 60s
 .PHONY: run-ssl
 
 stop:  ## stop the development servers
@@ -266,17 +264,11 @@ stop:  ## stop the development servers
 
 clean: \
   check-activate \
-  check-root-user
-clean:  ## remove downloaded sources
-	rm -r ./data/mysql57 ./data/mongo || exit 0
-.PHONY: clean
-
-clean-db: \
-  check-activate \
+  check-root-user \
   stop
-clean-db:  ## Remove mongo, mysql databases
+clean:  ## Remove mongo, mysql databases
 	$(COMPOSE) rm mongo mysql57
-.PHONY: clean-db
+.PHONY: clean
 
 initdb:
 	$(COMPOSE) up -d mongo mysql57

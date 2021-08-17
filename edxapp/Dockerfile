@@ -1,148 +1,79 @@
 ARG EDXAPP_STATIC_ROOT=/edx/var/edxapp/staticfiles
 ARG NGINX_IMAGE_NAME=leduong/openedx-nginx
 ARG NGINX_IMAGE_TAG=1.13
+ARG OPENEDX_IMAGE=leduong/openedx-lilac
+ARG OPENEDX_VERSION=1
 
 # === BASE ===
-FROM ubuntu:focal as base
-
-# Warning: This file is experimental.
-
-# Install system requirements
-RUN apt-get update && \
-    # Global requirements
-    DEBIAN_FRONTEND=noninteractive apt-get install --yes \
-    build-essential \
-    curl \
-    # If we don't need gcc, we should remove it.
-    g++ \
-    gcc \
-    git \
-    git-core \
-    language-pack-en \
-    libfreetype6-dev \
-    libmysqlclient-dev \
-    libssl-dev \
-    libxml2-dev \
-    libxmlsec1-dev \
-    libxslt1-dev \
-    swig \
-    # openedx requirements
-    gettext \
-    gfortran \
-    graphviz \
-    libffi-dev \
-    libfreetype6-dev \
-    libgeos-dev \
-    libgraphviz-dev \
-    libjpeg8-dev \
-    liblapack-dev \
-    libpng-dev \
-    libsqlite3-dev \
-    libxml2-dev \
-    libxmlsec1-dev \
-    libxslt1-dev \
-    # lynx: Required by https://github.com/edx/edx-platform/blob/b489a4ecb122/openedx/core/lib/html_to_text.py#L16
-    lynx \
-    ntp \
-    rdfind \
-    pkg-config \
-    python3-dev \
-    python3-venv \
-    && rm -rf /var/lib/apt/lists/*
-
-RUN locale-gen en_US.UTF-8
-ENV LANG en_US.UTF-8
-ENV LANGUAGE en_US:en
-ENV LC_ALL en_US.UTF-8
-
-WORKDIR /edx/app/edxapp/edx-platform
-
-ENV PATH /edx/app/edxapp/nodeenv/bin:${PATH}
-ENV PATH ./node_modules/.bin:${PATH}
-ENV CONFIG_ROOT /edx/etc/
-ENV PATH /edx/app/edxapp/edx-platform/bin:${PATH}
-ENV SETTINGS production
-ENV LMS_CFG /edx/etc/lms.yml
-ENV STUDIO_CFG /edx/etc/studio.yml
-ENV VIRTUAL_ENV=/edx/app/edxapp/.venv
-ENV PATH="$VIRTUAL_ENV/bin:$PATH"
-
-RUN python3.8 -m venv $VIRTUAL_ENV
-RUN mkdir -p /edx/etc/
-COPY ./etc/lms.yml /edx/etc/lms.yml
-COPY ./etc/studio.yml /edx/etc/studio.yml
+FROM ${OPENEDX_IMAGE}:${OPENEDX_VERSION} as base
 
 # Copy over remaining code.
 # We do this as late as possible so that small changes to the repo don't bust
 # the requirements cache.
+COPY ./etc/lms.yml /edx/etc/lms.yml
+COPY ./etc/studio.yml /edx/etc/studio.yml
 COPY ./edx-platform .
-
-# Install Python requirements
-RUN pip install -r requirements/pip.txt
-RUN pip install -r requirements/edx/base.txt
-RUN pip install .
-RUN nodeenv /edx/app/edxapp/nodeenv --node=12.11.1 --prebuilt
-RUN npm set progress=false && npm install
 
 # === DEVELOPMENT ===
 FROM base as development
 
-ARG DOCKER_UID
-ARG DOCKER_GID
+# Install development dependencies in a virtualenv
+RUN bash -c "source /edx/app/edxapp/.venv/bin/activate && \
+    pip install --no-cache-dir -r requirements/edx/development.txt"
+WORKDIR /edx/app/edxapp/edx-platform
 
-RUN groupadd --gid ${DOCKER_GID} edx || echo "Group with ID ${DOCKER_GID} already exists."
-RUN useradd --uid ${DOCKER_UID} --gid ${DOCKER_GID} edx || echo "Skip user creation (user with ID ${DOCKER_UID} already exists?)"
-
-RUN chown -R ${DOCKER_UID}:${DOCKER_GID} /edx/app/edxapp
+# Update assets skipping collectstatic (it should be done during deployment)
+ENV DJANGO_SETTINGS_MODULE ""
+RUN mkdir -p test_root/log
+RUN NO_PREREQ_INSTALL=1 paver update_assets --settings=production --skip-collect
 
 # Copy the entrypoint that will activate the virtualenv
 COPY ./entrypoint.sh /usr/local/bin/entrypoint.sh
 
-# Switch to an un-privileged user matching the host user to prevent permission
-# issues with volumes (host folders)
-USER ${DOCKER_UID}:${DOCKER_GID}
-
-# Install development dependencies in a virtualenv
-RUN bash -c "source /edx/app/edxapp/.venv/bin/activate && \
-    pip install --no-cache-dir -r requirements/edx/testing.txt && \
-    pip install --no-cache-dir -r requirements/edx/development.txt"
-
-RUN mkdir -p test_root/log
-ENV DJANGO_SETTINGS_MODULE ""
-RUN NO_PREREQ_INSTALL=1 paver update_assets lms --settings production
-
+ENV SERVICE_VARIANT lms
+ENV DJANGO_SETTINGS_MODULE ${SERVICE_VARIANT}.envs.devstack_docker
+CMD python /edx/app/edxapp/edx-platform/manage.py ${SERVICE_VARIANT} runserver 0.0.0.0:8000 --settings devstack_docker
 ENTRYPOINT [ "/usr/local/bin/entrypoint.sh" ]
 
 
-FROM development as lms-dev
-# TODO: This compiles static assets.
-# However, it's a bit of a hack, it's slow, and it's inefficient because makes the final Docker cache layer very large.
-# We ought to be able to this higher up in the Dockerfile, and do it the same for Prod and Devstack.
-ENV DJANGO_SETTINGS_MODULE lms.envs.devstack_decentralized
+# === STATIC LINKS COLLECTOR ===
+FROM development as links_collector
 
-FROM development as studio-dev
-# TODO: This compiles static assets.
-# However, it's a bit of a hack, it's slow, and it's inefficient because makes the final Docker cache layer very large.
-# We ought to be able to this higher up in the Dockerfile, and do it the same for Prod and Devstack.
-ENV DJANGO_SETTINGS_MODULE cms.envs.devstack_decentralized
+ARG EDXAPP_STATIC_ROOT
+
+RUN python manage.py lms collectstatic --link --noinput --settings production && \
+    python manage.py cms collectstatic --link --noinput --settings production
+
+# Replace duplicated file by a symlink to decrease the overall size of the
+# final image
+RUN rdfind -makesymlinks true -followsymlinks true ${EDXAPP_STATIC_ROOT}
+
+# === STATIC FILES COLLECTOR ===
+FROM development as files_collector
+
+ARG EDXAPP_STATIC_ROOT
+
+RUN python manage.py lms collectstatic --link --noinput --settings production && \
+    python manage.py cms collectstatic --link --noinput --settings production
+
+# Replace duplicated file by a symlink to decrease the overall size of the
+# final image
+RUN rdfind -makesymlinks true ${EDXAPP_STATIC_ROOT}
+
 
 # === PRODUCTION ===
-FROM base as lms
+FROM base as production
 ARG EDXAPP_STATIC_ROOT
 ENV SERVICE_VARIANT lms
-ENV DJANGO_SETTINGS_MODULE lms.envs.production
+ENV DJANGO_SETTINGS_MODULE ${SERVICE_VARIANT}.envs.production
 EXPOSE 8000
-COPY --from=development ${EDXAPP_STATIC_ROOT} ${EDXAPP_STATIC_ROOT}
-CMD gunicorn -c /edx/app/edxapp/edx-platform/lms/docker_lms_gunicorn.py --name lms --bind=0.0.0.0:8000 --max-requests=1000 --access-logfile - lms.wsgi:application
-
-FROM base as studio
-ARG EDXAPP_STATIC_ROOT
-ENV SERVICE_VARIANT cms
-ENV DJANGO_SETTINGS_MODULE cms.envs.production
-EXPOSE 8000
-COPY --from=development ${EDXAPP_STATIC_ROOT} ${EDXAPP_STATIC_ROOT}
-CMD gunicorn -c /edx/app/edxapp/edx-platform/cms/docker_cms_gunicorn.py --name cms --bind=0.0.0.0:8000 --max-requests=1000 --access-logfile - cms.wsgi:application
-
+COPY --from=links_collector ${EDXAPP_STATIC_ROOT} ${EDXAPP_STATIC_ROOT}
+CMD DJANGO_SETTINGS_MODULE=${SERVICE_VARIANT}.envs.production \
+    gunicorn -c /edx/app/edxapp/edx-platform/${SERVICE_VARIANT}/docker_${SERVICE_VARIANT}_gunicorn.py \
+    --name ${SERVICE_VARIANT} \
+    --bind=0.0.0.0:8000 \
+    --max-requests=1000 \
+    --access-logfile - ${SERVICE_VARIANT}.wsgi:application
 
 # === NGINX ===
 FROM ${NGINX_IMAGE_NAME}:${NGINX_IMAGE_TAG} as nginx
@@ -152,4 +83,4 @@ RUN mkdir -p ${EDXAPP_STATIC_ROOT}
 COPY ./nginx/conf.d/lms.conf /etc/nginx/conf.d/lms.conf
 COPY ./nginx/conf.d/cms.conf /etc/nginx/conf.d/cms.conf
 
-COPY --from=development ${EDXAPP_STATIC_ROOT} ${EDXAPP_STATIC_ROOT}
+COPY --from=files_collector ${EDXAPP_STATIC_ROOT} ${EDXAPP_STATIC_ROOT}

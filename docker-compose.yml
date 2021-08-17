@@ -74,8 +74,8 @@ services:
       default:
         aliases:
           - edx.devstack.mongo
-    volumes:
-      - ./data/mongo:/data/db
+    # volumes:
+    #   - ./data/mongo:/data/db
 
   mysql:
     command: mysqld --character-set-server=utf8 --collation-server=utf8_general_ci
@@ -86,9 +86,9 @@ services:
       MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
     image: mysql:5.6
     # ports:
-    #   - "3506:3306"
-    volumes:
-      - ./data/mysql:/var/lib/mysql
+    #   - "3306:3306"
+    # volumes:
+    #   - ./data/mysql:/var/lib/mysql
     networks:
       default:
         aliases:
@@ -103,9 +103,9 @@ services:
       MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
     image: mysql:5.7
     # ports:
-    #   - "3506:3306"
-    volumes:
-      - ./data/mysql57:/var/lib/mysql
+    #   - "3306:3306"
+    # volumes:
+    #   - ./data/mysql57:/var/lib/mysql
     networks:
       default:
         aliases:
@@ -126,10 +126,14 @@ services:
       - "44567:4567"
 
   lms:
+    environment:
+      DJANGO_SETTINGS_MODULE: lms.envs.production
+      SERVICE_VARIANT: lms
     build:
       context: ./edxapp
-      target: lms
+      target: production
     image: "${EDXAPP_IMAGE_NAME:-edxapp}:${EDXAPP_IMAGE_TAG:-lilac}"
+    container_name: "edx.vn.lms"
     hostname: lms.devstack.edx
     stdin_open: true
     tty: true
@@ -141,8 +145,8 @@ services:
       - discovery
       - forum
       - elasticsearch7
-    ports:
-      - "8072:8000"
+    # ports:
+    #   - "18000:8000"
     networks:
       default:
         aliases:
@@ -152,9 +156,8 @@ services:
   lms-dev:
     build:
       context: ./edxapp
-      target: lms-dev
-    command: python /edx/app/edxapp/edx-platform/manage.py lms runserver 0.0.0.0:8000 --settings devstack_docker
-    container_name: "edx.vn.lms"
+      target: development
+    container_name: "edx.vn.lms-dev"
     hostname: lms.devstack.edx
     depends_on:
       - devpi
@@ -174,10 +177,10 @@ services:
       EDXAPP_TEST_MONGO_HOST: edx.devstack.mongo
       NO_PYTHON_UNINSTALL: 1
       DJANGO_WATCHMAN_TIMEOUT: 30
-    # volumes:
-    #   - ./edxapp/edx-platform:/edx/app/edxapp/edx-platform
+    volumes:
+      - ./edxapp/edx-platform/lms:/edx/app/edxapp/edx-platform/lms
     ports:
-      - "8072:8000"
+      - "18000:8000"
     networks:
       default:
         aliases:
@@ -185,10 +188,14 @@ services:
           - lms.devstack.edx
 
   cms:
+    environment:
+      DJANGO_SETTINGS_MODULE: cms.envs.production
+      SERVICE_VARIANT: cms
     build:
       context: ./edxapp
-      target: studio
+      target: production
     image: "${EDXAPP_IMAGE_NAME:-edxapp}:${EDXAPP_IMAGE_TAG:-lilac}"
+    container_name: "edx.vn.cms"
     hostname: studio.devstack.edx
     stdin_open: true
     tty: true
@@ -209,9 +216,8 @@ services:
   cms-dev:
     build:
       context: ./edxapp
-      target: studio-dev
-    command: python /edx/app/edxapp/edx-platform/manage.py cms runserver 0.0.0.0:8000 --settings devstack_docker
-    container_name: "edx.vn.cms"
+      target: development
+    container_name: "edx.vn.cms-dev"
     hostname: studio.devstack.edx
     depends_on:
       - devpi
@@ -232,10 +238,10 @@ services:
       EDXAPP_TEST_MONGO_HOST: edx.devstack.mongo
       NO_PYTHON_UNINSTALL: 1
       DJANGO_WATCHMAN_TIMEOUT: 30
-    # volumes:
-    #   - ./edxapp/edx-platform:/edx/app/edxapp/edx-platform
+    volumes:
+      - ./edxapp/edx-platform/cms:/edx/app/edxapp/edx-platform/cms
     ports:
-      - "8082:8000"
+      - "18010:8000"
     networks:
       default:
         aliases:
@@ -271,10 +277,10 @@ services:
       context: ./edxapp
       target: nginx
     image: "${EDXAPP_NGINX_IMAGE_NAME:-edxapp-nginx}:${EDXAPP_IMAGE_TAG:-lilac}"
+    container_name: "edx.vn.nginx"
     ports:
-      - "8073:8073"
-      - "8083:8083"
-      - "8093:8093"
+      - "18000:18000"
+      - "18010:18010"
     networks:
       default:
         aliases:
