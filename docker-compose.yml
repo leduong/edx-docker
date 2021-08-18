@@ -127,7 +127,7 @@ services:
 
   lms:
     environment:
-      DJANGO_SETTINGS_MODULE: lms.envs.production
+      DJANGO_SETTINGS_MODULE: lms.envs.lms
       SERVICE_VARIANT: lms
     build:
       context: ./edxapp
@@ -189,7 +189,7 @@ services:
 
   cms:
     environment:
-      DJANGO_SETTINGS_MODULE: cms.envs.production
+      DJANGO_SETTINGS_MODULE: cms.envs.cms
       SERVICE_VARIANT: cms
     build:
       context: ./edxapp

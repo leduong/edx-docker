@@ -7,12 +7,6 @@ ARG OPENEDX_VERSION=1
 # === BASE ===
 FROM ${OPENEDX_IMAGE}:${OPENEDX_VERSION} as base
 
-# Copy over remaining code.
-# We do this as late as possible so that small changes to the repo don't bust
-# the requirements cache.
-COPY ./etc/lms.yml /edx/etc/lms.yml
-COPY ./etc/studio.yml /edx/etc/studio.yml
-COPY ./edx-platform .
 
 # === DEVELOPMENT ===
 FROM base as development
@@ -55,19 +49,29 @@ ARG EDXAPP_STATIC_ROOT
 RUN rdfind -makesymlinks true ${EDXAPP_STATIC_ROOT}
 RUN find ${EDXAPP_STATIC_ROOT} -type l -exec sed -i '' {} \;
 
-# === PRODUCTION ===
-FROM base as production
+# === EXDAPP BUILDER ===
+FROM base as exdapp
 ARG EDXAPP_STATIC_ROOT
 ENV SERVICE_VARIANT lms
-ENV DJANGO_SETTINGS_MODULE ${SERVICE_VARIANT}.envs.production
+ENV DJANGO_SETTINGS_MODULE lms.envs.production
 EXPOSE 8000
 COPY --from=links_collector ${EDXAPP_STATIC_ROOT} ${EDXAPP_STATIC_ROOT}
-CMD DJANGO_SETTINGS_MODULE=${SERVICE_VARIANT}.envs.production \
-    gunicorn -c /edx/app/edxapp/edx-platform/${SERVICE_VARIANT}/docker_${SERVICE_VARIANT}_gunicorn.py \
+CMD gunicorn -c /edx/app/edxapp/edx-platform/${SERVICE_VARIANT}/docker_${SERVICE_VARIANT}_gunicorn.py \
     --name ${SERVICE_VARIANT} \
     --bind=0.0.0.0:8000 \
     --max-requests=1000 \
     --access-logfile - ${SERVICE_VARIANT}.wsgi:application
+
+# === PRODUCTION ===
+FROM exdapp as production
+# Copy over remaining code.
+# We do this as late as possible so that small changes to the repo don't bust
+# the requirements cache.
+COPY ./edx-platform .
+COPY ./etc/lms.yml /edx/etc/lms.yml
+COPY ./etc/studio.yml /edx/etc/studio.yml
+COPY ./etc/lms.py ./lms/envs
+COPY ./etc/cms.py ./cms/envs
 
 # === NGINX ===
 FROM ${NGINX_IMAGE_NAME}:${NGINX_IMAGE_TAG} as nginx
