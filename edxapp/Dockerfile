@@ -37,29 +37,23 @@ ENTRYPOINT [ "/usr/local/bin/entrypoint.sh" ]
 
 
 # === STATIC LINKS COLLECTOR ===
-FROM development as links_collector
-
-ARG EDXAPP_STATIC_ROOT
-
+FROM development as collectstatic
 RUN python manage.py lms collectstatic --link --noinput --settings production && \
     python manage.py cms collectstatic --link --noinput --settings production
 
+FROM collectstatic as links_collector
+ARG EDXAPP_STATIC_ROOT
 # Replace duplicated file by a symlink to decrease the overall size of the
 # final image
 RUN rdfind -makesymlinks true -followsymlinks true ${EDXAPP_STATIC_ROOT}
 
 # === STATIC FILES COLLECTOR ===
-FROM development as files_collector
-
+FROM collectstatic as files_collector
 ARG EDXAPP_STATIC_ROOT
-
-RUN python manage.py lms collectstatic --link --noinput --settings production && \
-    python manage.py cms collectstatic --link --noinput --settings production
-
 # Replace duplicated file by a symlink to decrease the overall size of the
 # final image
 RUN rdfind -makesymlinks true ${EDXAPP_STATIC_ROOT}
-
+RUN find ${EDXAPP_STATIC_ROOT} -type l -exec sed -i '' {} \;
 
 # === PRODUCTION ===
 FROM base as production

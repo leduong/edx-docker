@@ -1,6 +1,6 @@
 # Target OpenEdx release
 FLAVORED_EDX_RELEASE_PATH  = build
-EDX_ARCHIVE_URL           ?= https://github.com/edx/edx-platform/archive/lilac.1.tar.gz
+EDX_ARCHIVE_URL           ?= https://github.com/edx/edx-platform/archive/open-release/lilac.master.tar.gz
 
 # Target OpenEdx demo course release
 EDX_DEMO_ARCHIVE_URL      ?= https://github.com/edx/edx-demo-course/archive/lilac.1.tar.gz

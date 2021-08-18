@@ -276,7 +276,7 @@ services:
     build:
       context: ./edxapp
       target: nginx
-    image: "${EDXAPP_NGINX_IMAGE_NAME:-edxapp-nginx}:${EDXAPP_IMAGE_TAG:-lilac}"
+    image: edxapp-nginx
     container_name: "edx.vn.nginx"
     ports:
       - "18000:18000"
@@ -287,11 +287,9 @@ services:
           - nginx
     volumes:
       - ./edxapp/nginx/${NGINX_CONF:-conf.d}:/etc/nginx/conf.d:ro
-      - ./data/media:/data/media:ro
     depends_on:
       - lms
       - cms
-      # - vlu
 
   phpmyadmin:
     image: phpmyadmin
