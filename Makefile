@@ -68,6 +68,8 @@ check-activate: ## Check if an OpenEdx release version has been activated
 check-activate:
 	@if [[ -z "${EDX_RELEASE}" ]] ; then\
 		echo -e "${COLOR_INFO}You must activate ENV an OpenEdx release first. Copy/paste the text\n${COLOR_RESET}";\
+		echo -e "${COLOR_INFO}export DOCKER_UID=$(DOCKER_UID)${COLOR_RESET}";\
+		echo -e "${COLOR_INFO}export DOCKER_GID=$(DOCKER_GID)${COLOR_RESET}";\
 		echo -e "${COLOR_INFO}export EDX_RELEASE=\"lilac.1\"${COLOR_RESET}";\
 		echo -e "${COLOR_INFO}export EDX_RELEASE_REF=\"open-release/lilac.1\"${COLOR_RESET}";\
 		echo -e "${COLOR_INFO}export EDX_DEMO_RELEASE_REF=\"open-release/lilac.1\"${COLOR_RESET}";\
