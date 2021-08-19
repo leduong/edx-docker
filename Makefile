@@ -200,6 +200,13 @@ logs:  ## get development logs
 	$(COMPOSE) logs -f
 .PHONY: logs
 
+permission: \
+  check-activate
+permission:  ## Reset permission
+	@echo "Reset permission..."
+	sudo chown -R $(DOCKER_UID):$(DOCKER_GID) edxapp/edx-platform
+.PHONY: permission
+
 # Nota bene: we do not use the MANAGE_* shortcut because, for some releases
 # (e.g.  dogwood), we cannot run the LMS while migrations haven't been
 # performed.
