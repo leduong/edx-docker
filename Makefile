@@ -81,20 +81,10 @@ bootstrap: \
   clean \
   initdb \
   build \
-  dev-build \
   migrate \
   run
 bootstrap:  ## install development dependencies
 .PHONY: bootstrap
-
-auth-init: \
-  check-activate
-auth-init: ## create an oauth client and API credentials
-	@echo "Booting mysql service..."
-	$(COMPOSE) up -d mysql57
-	$(WAIT_DB)
-	@$(COMPOSE_RUN) lms python /usr/local/bin/auth_init.py
-.PHONY: auth-init
 
 # Build production image. Note that the cms service uses the same image built
 # for the lms service.
@@ -184,11 +174,12 @@ info:  ## get activated release info
 	else\
 		echo -e "== Active configuration ==\n";\
 		echo -e "* EDX_RELEASE                : $(COLOR_INFO)$(EDX_RELEASE)$(COLOR_RESET)";\
+		echo -e "* DOCKER_UID                 : $(COLOR_INFO)$(DOCKER_UID)$(COLOR_RESET)";\
+		echo -e "* DOCKER_GID                 : $(COLOR_INFO)$(DOCKER_GID)$(COLOR_RESET)";\
 		echo -e "* EDX_RELEASE_REF            : $(COLOR_INFO)$(EDX_RELEASE_REF)$(COLOR_RESET)";\
 		echo -e "* EDX_ARCHIVE_URL            : $(COLOR_INFO)$(EDX_ARCHIVE_URL)$(COLOR_RESET)";\
 		echo -e "* EDX_DEMO_RELEASE_REF       : $(COLOR_INFO)$(EDX_DEMO_RELEASE_REF)$(COLOR_RESET)";\
 		echo -e "* EDX_DEMO_ARCHIVE_URL       : $(COLOR_INFO)$(EDX_DEMO_ARCHIVE_URL)$(COLOR_RESET)";\
-		echo -e "* REDIS_SERVICE              : $(COLOR_INFO)$(REDIS_SERVICE)$(COLOR_RESET)";\
 		echo -e "* EDXAPP_IMAGE_NAME          : $(COLOR_INFO)$(EDXAPP_IMAGE_NAME)$(COLOR_RESET)";\
 		echo -e "* EDXAPP_IMAGE_TAG           : $(COLOR_INFO)$(EDXAPP_IMAGE_TAG)$(COLOR_RESET)";\
 		echo -e "* EDXAPP_NGINX_IMAGE_NAME    : $(COLOR_INFO)$(EDXAPP_NGINX_IMAGE_NAME)$(COLOR_RESET)";\
