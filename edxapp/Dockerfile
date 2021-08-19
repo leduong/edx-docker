@@ -9,7 +9,6 @@ FROM ${OPENEDX_IMAGE}:${OPENEDX_VERSION} as base
 COPY ./edx-platform .
 ENV DJANGO_SETTINGS_MODULE ""
 RUN mkdir -p test_root/log
-COPY ./auth_init.py /usr/local/bin
 
 # === DEVELOPMENT ===
 FROM base as development

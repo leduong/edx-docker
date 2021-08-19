@@ -167,6 +167,8 @@ services:
       DJANGO_SETTINGS_MODULE: lms.envs.devstack_decentralized
       SERVICE_VARIANT: lms
     volumes:
+      - ./edxapp/etc:/edx/etc
+      - ./build:/edx/var
       - ./edxapp/edx-platform:/edx/app/edxapp/edx-platform
     ports:
       - "18000:8000"
@@ -234,7 +236,8 @@ services:
       DJANGO_SETTINGS_MODULE: cms.envs.devstack_decentralized
       SERVICE_VARIANT: cms
     volumes:
-      - ./build/staticfiles:/edx/app/edxapp/staticfiles
+      - ./edxapp/etc:/edx/etc
+      - ./build:/edx/var
       - ./edxapp/edx-platform:/edx/app/edxapp/edx-platform
     ports:
       - "18010:8000"

@@ -5,11 +5,7 @@
 __pycache__/
 *.py[cod]
 
-# Site media
-build/data/
-
-# Sources
-build/edx-demo-course
+build/*
 
 # Unit test / coverage reports
 htmlcov/
