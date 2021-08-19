@@ -1,4 +1,7 @@
-# Open edX Docker
+# Open edX Docker [Join Slack channels](https://join.slack.com/share/zt-ul2o0flf-XRl1J7HYuvnP7FohdGnI4Q) 
+<a href="https://www.buymeacoffee.com/leduong" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="32" /></a> 
+
+## Demo Site [edxdemo.site](https://edxdemo.site)
 
 ## Getting Started
 
