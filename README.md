@@ -66,6 +66,8 @@ First, you need to set ENV for  a release/flavor of OpenEdx versions we support.
 ### Copy/paste lilac/1 environment:
 
 ```
+export DOCKER_GID=$(id -g)
+export DOCKER_UID=$(id -u)
 export EDX_RELEASE="lilac.1"
 export EDX_RELEASE_REF="open-release/lilac.master"
 export EDX_DEMO_RELEASE_REF="open-release/lilac.1"
