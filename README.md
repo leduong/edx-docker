@@ -143,6 +143,9 @@ kernel setting (for reference, see https://unix.stackexchange.com/a/13757):
 # /etc/sysctl.conf (debian based)
 fs.inotify.max_user_watches=524288
 ```
+## Reference
+
+- Reference from [FUN](https://github.com/openfun/openedx-docker). Thanks
 
 ## License
 
