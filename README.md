@@ -142,6 +142,7 @@ kernel setting (for reference, see https://unix.stackexchange.com/a/13757):
 ```ini
 # /etc/sysctl.conf (debian based)
 fs.inotify.max_user_watches=524288
+```
 
 ## License
 
