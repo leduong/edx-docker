@@ -1,6 +1,8 @@
 # Open edX Docker [Join Slack channels](https://join.slack.com/share/zt-ul2o0flf-XRl1J7HYuvnP7FohdGnI4Q) 
 <a href="https://www.buymeacoffee.com/leduong" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="32" /></a> 
 
+The Open edX software, inclusive of all system software and third party libraries, is free to download and free to use. edX releases a major update to the software around once per year. The software is controlled by edX but maintained by a consortium of community users consting mostly the engineering team at edX itself along with contributions from member universities around the world. This group does not charge fees for access to their regular software updates. Your only costs will be external consulting costs, if any, for the installation and configuration, and recurring cloud computing costs. My blog article, "How Much Does Open edX Cost?" includes summaries of itemized projects costs that have been voluntarily submitted by user in the Open edX community over the last few years.
+
 ## Demo Site [edxdemo.site](https://edxdemo.site)
 
 ## Getting Started
