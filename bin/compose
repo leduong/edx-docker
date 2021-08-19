@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+DOCKER_UID=$(id -u)
+DOCKER_GID=$(id -g)
+EDXAPP_IMAGE_TAG="${EDX_RELEASE:-master}"
+
+export DOCKER_UID
+export DOCKER_GID
+export EDXAPP_IMAGE_TAG
+
+docker-compose "${@}"
