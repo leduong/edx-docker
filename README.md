@@ -104,7 +104,7 @@ compile static files in local directories that are mounted as docker volumes in
 the target container:
 
 ```bash
-$ export DOCKER_GID=$(id -g) && DOCKER_UID=$(id -u) && make permission
+$ export DOCKER_GID=$(id -g) && export DOCKER_UID=$(id -u) && make permission
 $ make dev-assets
 ```
 
