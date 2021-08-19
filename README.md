@@ -103,7 +103,8 @@ If you intend to work on edx-platform or its configuration, you'll need to
 compile static files in local directories that are mounted as docker volumes in
 the target container:
 
-```bash ⚠️
+```bash
+$ make permission
 $ make dev-assets
 ```
 

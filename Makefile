@@ -87,6 +87,14 @@ bootstrap: \
 bootstrap:  ## install development dependencies
 .PHONY: bootstrap
 
+auth-init: \
+  check-activate
+auth-init: ## create an oauth client and API credentials
+	@echo "Booting mysql service..."
+	$(COMPOSE) up -d mysql57
+	$(WAIT_DB)
+	@$(COMPOSE_RUN) lms python /usr/local/bin/auth_init.py
+.PHONY: auth-init
 
 # Build production image. Note that the cms service uses the same image built
 # for the lms service.
@@ -134,8 +142,23 @@ dev-assets: \
   check-root-user \
   dev-install
 dev-assets:  ## run update_assets to copy required statics in local volumes
-	$(COMPOSE_RUN) --no-deps lms-dev paver update_assets lms --settings devstack_docker --skip-collect
+	$(COMPOSE_RUN) --no-deps lms-dev \
+		bash -c 'source /edx/app/edxapp/.venv/bin/activate && \
+			DJANGO_SETTINGS_MODULE="" NO_PREREQ_INSTALL=1 paver update_assets --settings devstack_decentralized --skip-collect'
 .PHONY: dev-assets
+
+# In development, we are mounting edx-platform's sources as a volume, hence,
+# since sources are modified during the installation, we need to re-install
+# them.
+dev-install: \
+  check-activate \
+  check-root-user
+dev-install:  ## Install development dependencies in a virtualenv
+	$(COMPOSE_RUN) --no-deps lms-dev \
+		bash -c 'source /edx/app/edxapp/.venv/bin/activate && \
+			npm set progress=false && npm install && \
+			pip install --no-cache-dir -r requirements/edx/development.txt'
+.PHONY: dev-install
 
 # Build development image. Note that the cms-dev service uses the same image
 # built for the lms-dev service.
@@ -146,17 +169,6 @@ dev-build:  ## build the edxapp production image
 	@echo "🐳 Building development image..."
 	$(COMPOSE) build lms-dev
 .PHONY: dev-build
-
-# In development, we are mounting edx-platform's sources as a volume, hence,
-# since sources are modified during the installation, we need to re-install
-# them.
-dev-install: \
-  check-activate \
-  check-root-user
-dev-install:  ## re-install local libs in mounted sources
-	$(COMPOSE_RUN) --no-deps lms-dev pip install -r requirements/edx/local.in
-	$(COMPOSE_RUN) --no-deps lms-dev npm install
-.PHONY: dev-install
 
 dev-watch: \
   check-activate \
@@ -187,6 +199,13 @@ info:  ## get activated release info
 logs:  ## get development logs
 	$(COMPOSE) logs -f
 .PHONY: logs
+
+permission: \
+  check-activate
+permission:  ## Reset permission
+	@echo "Reset permission..."
+	sudo chown -R $(DOCKER_UID):$(DOCKER_GID) edxapp/edx-platform
+.PHONY: permission
 
 # Nota bene: we do not use the MANAGE_* shortcut because, for some releases
 # (e.g.  dogwood), we cannot run the LMS while migrations haven't been

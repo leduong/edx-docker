@@ -21,6 +21,8 @@ AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID', None)
 AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY', None)
 AWS_QUERYSTRING_AUTH = bool(os.environ.get('AWS_QUERYSTRING_AUTH', True))
 AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME', None)
+COURSE_IMPORT_EXPORT_BUCKET = os.environ.get(
+    'COURSE_IMPORT_EXPORT_BUCKET', ENV_TOKENS.get('COURSE_IMPORT_EXPORT_BUCKET', ''))
 AWS_S3_CUSTOM_DOMAIN = os.environ.get('AWS_S3_CUSTOM_DOMAIN', None)
 
 if AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY:
@@ -32,6 +34,20 @@ else:
     ORA2_FILEUPLOAD_BACKEND = 'django'
     DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
 
+if COURSE_IMPORT_EXPORT_BUCKET:
+    COURSE_IMPORT_EXPORT_STORAGE = 'cms.djangoapps.contentstore.storage.ImportExportS3Storage'
+else:
+    COURSE_IMPORT_EXPORT_STORAGE = DEFAULT_FILE_STORAGE
+
+USER_TASKS_ARTIFACT_STORAGE = COURSE_IMPORT_EXPORT_STORAGE
+
+COURSE_METADATA_EXPORT_BUCKET = ENV_TOKENS.get(
+    'COURSE_METADATA_EXPORT_BUCKET', '')
+
+if COURSE_METADATA_EXPORT_BUCKET:
+    COURSE_METADATA_EXPORT_STORAGE = 'cms.djangoapps.export_course_metadata.storage.CourseMetadataExportS3Storage'
+else:
+    COURSE_METADATA_EXPORT_STORAGE = DEFAULT_FILE_STORAGE
 
 USE_I18N = True
 
@@ -105,13 +121,13 @@ FEATURES['LICENSING'] = True
 
 
 ########################## Courseware Search #######################
-FEATURES['ENABLE_COURSEWARE_SEARCH'] = False
+FEATURES['ENABLE_COURSEWARE_SEARCH'] = True
 FEATURES['ENABLE_COURSEWARE_SEARCH_FOR_COURSE_STAFF'] = True
 SEARCH_ENGINE = 'search.elastic.ElasticSearchEngine'
 
 
 ########################## Dashboard Search #######################
-FEATURES['ENABLE_DASHBOARD_SEARCH'] = False
+FEATURES['ENABLE_DASHBOARD_SEARCH'] = True
 
 
 ########################## Certificates Web/HTML View #######################
@@ -135,7 +151,7 @@ COURSE_DISCOVERY_MEANINGS = {
     'language': LANGUAGE_MAP,
 }
 
-FEATURES['ENABLE_COURSE_DISCOVERY'] = False
+FEATURES['ENABLE_COURSE_DISCOVERY'] = True
 # Setting for overriding default filtering facets for Course discovery
 # COURSE_DISCOVERY_FILTERS = ["org", "language", "modes"]
 FEATURES['COURSES_ARE_BROWSEABLE'] = True
@@ -184,7 +200,7 @@ CORS_ALLOW_HEADERS = corsheaders_default_headers + (
     'use-jwt-cookie',
 )
 
-LOGIN_REDIRECT_WHITELIST = [CMS_BASE]
+LOGIN_REDIRECT_WHITELIST = [CMS_BASE, LMS_BASE, LMS_ROOT_URL]
 
 ###################### JWTs ######################
 JWT_AUTH.update({
