@@ -77,23 +77,6 @@ services:
     # volumes:
     #   - ./data/mongo:/data/db
 
-  mysql:
-    command: mysqld --character-set-server=utf8 --collation-server=utf8_general_ci
-    container_name: "edx.vn.mysql"
-    hostname: mysql.devstack.edx
-    environment:
-      MYSQL_ROOT_PASSWORD: ""
-      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
-    image: mysql:5.6
-    # ports:
-    #   - "3306:3306"
-    # volumes:
-    #   - ./data/mysql:/var/lib/mysql
-    networks:
-      default:
-        aliases:
-          - edx.devstack.mysql
-
   mysql57:
     command: mysqld --character-set-server=utf8 --collation-server=utf8_general_ci
     container_name: "edx.vn.mysql57"
@@ -157,6 +140,9 @@ services:
     build:
       context: ./edxapp
       target: development
+      args:
+        DOCKER_UID: ${DOCKER_UID}
+        DOCKER_GID: ${DOCKER_GID}
     container_name: "edx.vn.lms-dev"
     hostname: lms.devstack.edx
     depends_on:
@@ -170,6 +156,7 @@ services:
     # Allows attachment to the LMS service using 'docker attach <containerID>'.
     stdin_open: true
     tty: true
+    user: ${DOCKER_UID}:${DOCKER_GID}
     environment:
       BOK_CHOY_HOSTNAME: edx.devstack.lms
       BOK_CHOY_LMS_PORT: 18003
@@ -177,10 +164,10 @@ services:
       EDXAPP_TEST_MONGO_HOST: edx.devstack.mongo
       NO_PYTHON_UNINSTALL: 1
       DJANGO_WATCHMAN_TIMEOUT: 30
-      DJANGO_SETTINGS_MODULE: lms.envs.devstack_docker
+      DJANGO_SETTINGS_MODULE: lms.envs.devstack_decentralized
       SERVICE_VARIANT: lms
     volumes:
-      - ./edxapp/edx-platform/lms:/edx/app/edxapp/edx-platform/lms
+      - ./edxapp/edx-platform:/edx/app/edxapp/edx-platform
     ports:
       - "18000:8000"
     networks:
@@ -219,6 +206,9 @@ services:
     build:
       context: ./edxapp
       target: development
+      args:
+        DOCKER_UID: ${DOCKER_UID}
+        DOCKER_GID: ${DOCKER_GID}
     container_name: "edx.vn.cms-dev"
     hostname: studio.devstack.edx
     depends_on:
@@ -233,6 +223,7 @@ services:
     # Allows attachment to the LMS service using 'docker attach <containerID>'.
     stdin_open: true
     tty: true
+    user: ${DOCKER_UID}:${DOCKER_GID}
     environment:
       BOK_CHOY_HOSTNAME: edx.devstack.studio
       BOK_CHOY_LMS_PORT: 18003
@@ -243,7 +234,8 @@ services:
       DJANGO_SETTINGS_MODULE: cms.envs.devstack_decentralized
       SERVICE_VARIANT: cms
     volumes:
-      - ./edxapp/edx-platform/cms:/edx/app/edxapp/edx-platform/cms
+      - ./build/staticfiles:/edx/app/edxapp/staticfiles
+      - ./edxapp/edx-platform:/edx/app/edxapp/edx-platform
     ports:
       - "18010:8000"
     networks:

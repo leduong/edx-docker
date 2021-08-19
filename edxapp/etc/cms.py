@@ -16,16 +16,30 @@ AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID', None)
 AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY', None)
 AWS_QUERYSTRING_AUTH = bool(os.environ.get('AWS_QUERYSTRING_AUTH', True))
 AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME', None)
+COURSE_IMPORT_EXPORT_BUCKET = os.environ.get(
+    'COURSE_IMPORT_EXPORT_BUCKET', ENV_TOKENS.get('COURSE_IMPORT_EXPORT_BUCKET', ''))
 AWS_S3_CUSTOM_DOMAIN = os.environ.get('AWS_S3_CUSTOM_DOMAIN', None)
 
 if AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY:
     AWS_DEFAULT_ACL = None
     DEFAULT_FILE_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
 else:
-    # Don't use S3 in devstack, fall back to filesystem
-    COURSE_IMPORT_EXPORT_STORAGE = 'django.core.files.storage.FileSystemStorage'
-    USER_TASKS_ARTIFACT_STORAGE = COURSE_IMPORT_EXPORT_STORAGE
     DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+
+if COURSE_IMPORT_EXPORT_BUCKET:
+    COURSE_IMPORT_EXPORT_STORAGE = 'cms.djangoapps.contentstore.storage.ImportExportS3Storage'
+else:
+    COURSE_IMPORT_EXPORT_STORAGE = DEFAULT_FILE_STORAGE
+
+USER_TASKS_ARTIFACT_STORAGE = COURSE_IMPORT_EXPORT_STORAGE
+
+COURSE_METADATA_EXPORT_BUCKET = ENV_TOKENS.get(
+    'COURSE_METADATA_EXPORT_BUCKET', '')
+
+if COURSE_METADATA_EXPORT_BUCKET:
+    COURSE_METADATA_EXPORT_STORAGE = 'cms.djangoapps.export_course_metadata.storage.CourseMetadataExportS3Storage'
+else:
+    COURSE_METADATA_EXPORT_STORAGE = DEFAULT_FILE_STORAGE
 
 USE_I18N = True
 

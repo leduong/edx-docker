@@ -7,36 +7,42 @@ ARG OPENEDX_VERSION=1
 # === BASE ===
 FROM ${OPENEDX_IMAGE}:${OPENEDX_VERSION} as base
 COPY ./edx-platform .
-
+ENV DJANGO_SETTINGS_MODULE ""
+RUN mkdir -p test_root/log
+COPY ./auth_init.py /usr/local/bin
 
 # === DEVELOPMENT ===
 FROM base as development
-
-# Install development dependencies in a virtualenv
-RUN bash -c "source /edx/app/edxapp/.venv/bin/activate && \
-    pip install --no-cache-dir -r requirements/edx/development.txt"
-WORKDIR /edx/app/edxapp/edx-platform
-
-# Update assets skipping collectstatic (it should be done during deployment)
 ENV DJANGO_SETTINGS_MODULE ""
-RUN mkdir -p test_root/log
-RUN NO_PREREQ_INSTALL=1 paver update_assets --settings=production --skip-collect
+
+ARG DOCKER_UID
+ARG DOCKER_GID
+
+RUN groupadd --gid ${DOCKER_GID} edx || echo "Group with ID ${DOCKER_GID} already exists."
+RUN useradd --uid ${DOCKER_UID} --gid ${DOCKER_GID} edx || echo "Skip user creation (user with ID ${DOCKER_UID} already exists?)"
+
+RUN chown -R ${DOCKER_UID}:${DOCKER_GID} /edx
+USER ${DOCKER_UID}:${DOCKER_GID}
 
 # Copy the entrypoint that will activate the virtualenv
 COPY ./entrypoint.sh /usr/local/bin/entrypoint.sh
 
 ENV SERVICE_VARIANT lms
-ENV DJANGO_SETTINGS_MODULE ${SERVICE_VARIANT}.envs.devstack_docker
+ENV DJANGO_SETTINGS_MODULE lms.envs.devstack_decentralized
 CMD python /edx/app/edxapp/edx-platform/manage.py ${SERVICE_VARIANT} runserver 0.0.0.0:8000
 ENTRYPOINT [ "/usr/local/bin/entrypoint.sh" ]
 
+# === BUILDER ===
+FROM base as builder
+# Update assets skipping collectstatic (it should be done during deployment)
+RUN NO_PREREQ_INSTALL=1 paver update_assets --settings=production --skip-collect
 
 # === STATIC LINKS COLLECTOR ===
-FROM development as collectstatic
+FROM builder as collectstatic
 RUN python manage.py lms collectstatic --link --noinput --settings production && \
     python manage.py cms collectstatic --link --noinput --settings production
 
-FROM collectstatic as links_collector
+FROM builder as links_collector
 ARG EDXAPP_STATIC_ROOT
 # Replace duplicated file by a symlink to decrease the overall size of the
 # final image
@@ -68,7 +74,6 @@ FROM exdapp as production
 # Copy over remaining code.
 # We do this as late as possible so that small changes to the repo don't bust
 # the requirements cache.
-COPY ./edx-platform .
 COPY ./etc/lms.yml /edx/etc/lms.yml
 COPY ./etc/studio.yml /edx/etc/studio.yml
 COPY ./etc/lms.py ./lms/envs
