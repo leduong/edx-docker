@@ -86,20 +86,6 @@ LOGGING['loggers']['tracking']['handlers'] = ['console']
 EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 EMAIL_FILE_PATH = '/edx/src/ace_messages/'
 
-############################ PYFS XBLOCKS SERVICE #############################
-# Set configuration for Django pyfilesystem
-
-DJFS = {
-    'type': 'osfs',
-    'directory_root': 'lms/static/djpyfs',
-    'url_root': '/static/djpyfs',
-}
-
-
-def should_show_debug_toolbar(request):
-    return False
-
-
 ########################### External REST APIs #################################
 FEATURES['ENABLE_OAUTH2_PROVIDER'] = True
 FEATURES['ENABLE_MOBILE_REST_API'] = True

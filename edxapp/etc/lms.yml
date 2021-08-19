@@ -17,8 +17,8 @@ ANALYTICS_API_KEY: ''
 ANALYTICS_API_URL: http://localhost:18100
 ANALYTICS_DASHBOARD_NAME: Your Platform Name Here Insights
 ANALYTICS_DASHBOARD_URL: http://localhost:18110/courses
-API_ACCESS_FROM_EMAIL: api-requests@example.com
-API_ACCESS_MANAGER_EMAIL: api-access@example.com
+API_ACCESS_FROM_EMAIL: api-requests@edxdemo.site
+API_ACCESS_MANAGER_EMAIL: api-access@edxdemo.site
 API_DOCUMENTATION_URL: http://course-catalog-api-guide.readthedocs.io/en/latest/
 AUDIT_CERT_CUTOFF_DATE: null
 AUTH_DOCUMENTATION_URL: http://course-catalog-api-guide.readthedocs.io/en/latest/authentication/index.html
@@ -46,8 +46,8 @@ BLOCK_STRUCTURES_SETTINGS:
     TASK_DEFAULT_RETRY_DELAY: 30
     TASK_MAX_RETRIES: 5
 BRANCH_IO_KEY: ''
-BUGS_EMAIL: bugs@example.com
-BULK_EMAIL_DEFAULT_FROM_EMAIL: no-reply@example.com
+BUGS_EMAIL: bugs@edxdemo.site
+BULK_EMAIL_DEFAULT_FROM_EMAIL: no-reply@edxdemo.site
 BULK_EMAIL_EMAILS_PER_TASK: 500
 BULK_EMAIL_LOG_SENT_EMAILS: false
 BULK_EMAIL_ROUTING_KEY_SMALL_JOBS: edx.lms.core.default
@@ -129,7 +129,7 @@ COMMENTS_SERVICE_URL: http://localhost:18080
 COMPREHENSIVE_THEME_DIRS:
 - ''
 COMPREHENSIVE_THEME_LOCALE_PATHS: []
-CONTACT_EMAIL: info@example.com
+CONTACT_EMAIL: info@edxdemo.site
 CONTACT_MAILING_ADDRESS: SET-ME-PLEASE
 CONTENTSTORE:
     ADDITIONAL_OPTIONS: {}
@@ -204,9 +204,9 @@ DATABASES:
         USER: edxapp001
 DATA_DIR: /edx/var/edxapp
 DEFAULT_COURSE_VISIBILITY_IN_CATALOG: both
-DEFAULT_FEEDBACK_EMAIL: feedback@example.com
+DEFAULT_FEEDBACK_EMAIL: feedback@edxdemo.site
 DEFAULT_FILE_STORAGE: django.core.files.storage.FileSystemStorage
-DEFAULT_FROM_EMAIL: registration@example.com
+DEFAULT_FROM_EMAIL: registration@edxdemo.site
 DEFAULT_JWT_ISSUER:
     AUDIENCE: lms-key
     ISSUER: http://edxdemo.site/oauth2
@@ -354,7 +354,7 @@ LOGGING_ENV: sandbox
 LOGIN_REDIRECT_WHITELIST: []
 LOG_DIR: /edx/var/log/edx
 LTI_AGGREGATE_SCORE_PASSBACK_DELAY: 900
-LTI_USER_EMAIL_DOMAIN: lti.example.com
+LTI_USER_EMAIL_DOMAIN: lti.edxdemo.site
 MAILCHIMP_NEW_USER_LIST_ID: null
 MAINTENANCE_BANNER_TEXT: Sample banner message
 MEDIA_ROOT: /edx/var/edxapp/media/
@@ -425,7 +425,7 @@ PARTNER_SUPPORT_EMAIL: ''
 PASSWORD_POLICY_COMPLIANCE_ROLLOUT_CONFIG:
     ENFORCE_COMPLIANCE_ON_LOGIN: false
 PASSWORD_RESET_SUPPORT_LINK: ''
-PAYMENT_SUPPORT_EMAIL: billing@example.com
+PAYMENT_SUPPORT_EMAIL: billing@edxdemo.site
 PDF_RECEIPT_BILLING_ADDRESS: 'Enter your receipt billing
 
     address here.
@@ -449,7 +449,7 @@ PLATFORM_FACEBOOK_ACCOUNT: http://www.facebook.com/YourPlatformFacebookAccount
 PLATFORM_NAME: Your Platform Name Here
 PLATFORM_TWITTER_ACCOUNT: '@YourPlatformTwitterAccount'
 POLICY_CHANGE_GRADES_ROUTING_KEY: edx.lms.core.default
-PRESS_EMAIL: press@example.com
+PRESS_EMAIL: press@edxdemo.site
 PROCTORING_BACKENDS:
     DEFAULT: 'null'
     'null': {}
@@ -496,7 +496,7 @@ RETIREMENT_STATES:
 - COMPLETE
 SECRET_KEY: DUMMY KEY ONLY FOR TO DEVSTACK
 SEGMENT_KEY: null
-SERVER_EMAIL: devops@example.com
+SERVER_EMAIL: devops@edxdemo.site
 SESSION_COOKIE_DOMAIN: ''
 SESSION_COOKIE_NAME: sessionid
 SESSION_COOKIE_SECURE: false
@@ -531,16 +531,16 @@ SWIFT_USERNAME: null
 SWIFT_USE_TEMP_URLS: false
 SYSLOG_SERVER: ''
 SYSTEM_WIDE_ROLE_CLASSES: []
-TECH_SUPPORT_EMAIL: technical@example.com
+TECH_SUPPORT_EMAIL: technical@edxdemo.site
 TIME_ZONE: America/New_York
 TRACKING_SEGMENTIO_WEBHOOK_SECRET: ''
-UNIVERSITY_EMAIL: university@example.com
+UNIVERSITY_EMAIL: university@edxdemo.site
 USERNAME_REPLACEMENT_WORKER: OVERRIDE THIS WITH A VALID USERNAME
 VERIFY_STUDENT:
     DAYS_GOOD_FOR: 365
     EXPIRING_SOON_WINDOW: 28
 VIDEO_CDN_URL:
-    EXAMPLE_COUNTRY_CODE: http://example.com/edx/video?s3_url=
+    EXAMPLE_COUNTRY_CODE: http://edxdemo.site/edx/video?s3_url=
 VIDEO_IMAGE_MAX_AGE: 31536000
 VIDEO_IMAGE_SETTINGS:
     DIRECTORY_PREFIX: video-images/
