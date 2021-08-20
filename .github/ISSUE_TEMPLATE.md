@@ -1,14 +1,14 @@
-## Expected Behavior
+## 💡 Expected Behavior
 
 Description...
 
 
-## Actual Behavior
+## ✨ Actual Behavior
 
 Description...
 
 
-## Steps to Reproduce
+## 🐛 Steps to Reproduce
 
 Description...
 
@@ -16,7 +16,7 @@ Description...
 2. item 2...
 
 
-## Specifications
+## 🔥 Specifications
 
 - Version: ...
 - Platform: ...
