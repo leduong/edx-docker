@@ -260,7 +260,14 @@ initdb:
 
 generate-passwords:  ## stop the development servers
 	@wget -q "https://raw.githubusercontent.com/edx/configuration/${EDX_RELEASE_REF}/playbooks/sample_vars/passwords.yml" -O /tmp/passwords-template.yml
-	while IFS= read line; do REPLACE=$$(LC_ALL=C < /dev/urandom tr -dc 'A-Za-z0-9' | head -c35) && echo \"$$line\" | sed "s/\!\!null/\'$$REPLACE\'/"; done < /tmp/passwords-template.yml | tee ./edxapp/etc/passwords.yml
+	while IFS= read line; do \
+		length=35; \
+		if [[ $$line == *SECRET_KEY* ]]; then \
+			length=100; \
+		fi; \
+		REPLACE=$$(LC_ALL=C < /dev/urandom tr -dc 'A-Za-z0-9' | head -c35) && \
+		echo "$$line" | sed "s/\!\!null.*/\'$$REPLACE\'/"; \
+	done < /tmp/passwords-template.yml > ./edxapp/etc/passwords.yml
 .PHONY: generate-passwords
 
 superuser: \
