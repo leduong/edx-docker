@@ -10,20 +10,34 @@ import os
 from .production import *  # pylint: disable=wildcard-import, unused-wildcard-import
 
 WIKI_ENABLED = False
-
-AWS_SES_REGION_NAME = os.environ.get('AWS_SES_REGION_NAME', 'us-east-2')
-AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID', None)
-AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY', None)
-AWS_QUERYSTRING_AUTH = bool(os.environ.get('AWS_QUERYSTRING_AUTH', True))
-AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME', None)
+LMS_KEY = os.environ.get(
+    'LMS_KEY', ENV_TOKENS.get('LMS_KEY', 'lms-key-openedx-vn'))
+LMS_SECRET = os.environ.get(
+    'LMS_SECRET', ENV_TOKENS.get('LMS_SECRET', 'lms-secret-openedx-vn'))
+AWS_SES_REGION_NAME = os.environ.get(
+    'AWS_SES_REGION_NAME', ENV_TOKENS.get('AWS_SES_REGION_NAME', ''))
+AWS_ACCESS_KEY_ID = os.environ.get(
+    'AWS_ACCESS_KEY_ID', ENV_TOKENS.get('AWS_ACCESS_KEY_ID', ''))
+AWS_SECRET_ACCESS_KEY = os.environ.get(
+    'AWS_SECRET_ACCESS_KEY', ENV_TOKENS.get('AWS_SECRET_ACCESS_KEY', ''))
+AWS_QUERYSTRING_AUTH = bool(os.environ.get(
+    'AWS_QUERYSTRING_AUTH', ENV_TOKENS.get('AWS_QUERYSTRING_AUTH', '')))
+AWS_STORAGE_BUCKET_NAME = os.environ.get(
+    'AWS_STORAGE_BUCKET_NAME', ENV_TOKENS.get('AWS_STORAGE_BUCKET_NAME', ''))
+AWS_S3_CUSTOM_DOMAIN = os.environ.get(
+    'AWS_S3_CUSTOM_DOMAIN', ENV_TOKENS.get('AWS_S3_CUSTOM_DOMAIN', ''))
 COURSE_IMPORT_EXPORT_BUCKET = os.environ.get(
     'COURSE_IMPORT_EXPORT_BUCKET', ENV_TOKENS.get('COURSE_IMPORT_EXPORT_BUCKET', ''))
-AWS_S3_CUSTOM_DOMAIN = os.environ.get('AWS_S3_CUSTOM_DOMAIN', None)
+COURSE_METADATA_EXPORT_BUCKET = os.environ.get(
+    'COURSE_METADATA_EXPORT_BUCKET', ENV_TOKENS.get('COURSE_METADATA_EXPORT_BUCKET', ''))
 
 if AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY:
     AWS_DEFAULT_ACL = None
     DEFAULT_FILE_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
 else:
+    # Don't use S3 in devstack, fall back to filesystem
+    MEDIA_ROOT = "/edx/var/edxapp/uploads"
+    ORA2_FILEUPLOAD_BACKEND = 'django'
     DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
 
 if COURSE_IMPORT_EXPORT_BUCKET:
@@ -32,10 +46,6 @@ else:
     COURSE_IMPORT_EXPORT_STORAGE = DEFAULT_FILE_STORAGE
 
 USER_TASKS_ARTIFACT_STORAGE = COURSE_IMPORT_EXPORT_STORAGE
-
-COURSE_METADATA_EXPORT_BUCKET = ENV_TOKENS.get(
-    'COURSE_METADATA_EXPORT_BUCKET', '')
-
 if COURSE_METADATA_EXPORT_BUCKET:
     COURSE_METADATA_EXPORT_STORAGE = 'cms.djangoapps.export_course_metadata.storage.CourseMetadataExportS3Storage'
 else:
@@ -56,63 +66,7 @@ LOGGING['handlers']['local'] = LOGGING['handlers']['tracking'] = {
 
 LOGGING['loggers']['tracking']['handlers'] = ['console']
 
-################################ EMAIL ########################################
-
-EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
-EMAIL_FILE_PATH = '/edx/src/ace_messages/'
-
-############################ PYFS XBLOCKS SERVICE #############################
-# Set configuration for Django pyfilesystem
-
-DJFS = {
-    'type': 'osfs',
-    'directory_root': 'cms/static/djpyfs',
-    'url_root': '/static/djpyfs',
-}
-
-################################# CELERY ######################################
-
-# By default don't use a worker, execute tasks as if they were local functions
-CELERY_ALWAYS_EAGER = True
-
-
-def should_show_debug_toolbar(request):
-    return False
-
-
-################################ MILESTONES ################################
-FEATURES['MILESTONES_APP'] = True
-
-
-################################ ENTRANCE EXAMS ################################
-FEATURES['ENTRANCE_EXAMS'] = True
-
-################################ COURSE LICENSES ################################
-FEATURES['LICENSING'] = True
-# Needed to enable licensing on video modules
-XBLOCK_SETTINGS.update({'VideoBlock': {'licensing_enabled': True}})
-
-################################ SEARCH INDEX ################################
-FEATURES['ENABLE_COURSEWARE_INDEX'] = False
-FEATURES['ENABLE_LIBRARY_INDEX'] = False
-SEARCH_ENGINE = "search.elastic.ElasticSearchEngine"
-
-################################ COURSE DISCUSSIONS ###########################
-FEATURES['ENABLE_DISCUSSION_SERVICE'] = True
-
-################################ CREDENTIALS ###########################
-CREDENTIALS_SERVICE_USERNAME = 'credentials_worker'
-
-########################## Certificates Web/HTML View #######################
-FEATURES['CERTIFICATES_HTML_VIEW'] = True
-
-########################## AUTHOR PERMISSION #######################
-FEATURES['ENABLE_CREATOR_GROUP'] = False
-
-################### FRONTEND APPLICATION PUBLISHER URL ###################
-FEATURES['FRONTEND_APP_PUBLISHER_URL'] = 'http://localhost:18400'
-
-########################### OAUTH2 #################################
+################################ OAUTH2 ######################################
 JWT_AUTH.update({
     'JWT_ISSUER': f'{LMS_ROOT_URL}/oauth2',
     'JWT_ISSUERS': [{
@@ -144,29 +98,3 @@ JWT_AUTH.update({
         'kty": "RSA"}'
     ),
 })
-
-# pylint: enable=unicode-format-string  # lint-amnesty, pylint: disable=bad-option-value
-
-# IDA_LOGOUT_URI_LIST = [
-#     'http://localhost:18130/logout/',  # ecommerce
-#     'http://localhost:18150/logout/',  # credentials
-# ]
-
-############################### BLOCKSTORE #####################################
-BLOCKSTORE_API_URL = "http://edx.devstack.blockstore:18250/api/v1/"
-
-#####################################################################
-
-# pylint: disable=wrong-import-order, wrong-import-position
-# pylint: disable=wrong-import-order, wrong-import-position
-
-add_plugins(__name__, ProjectType.CMS, SettingsType.PRODUCTION)
-
-OPENAPI_CACHE_TIMEOUT = 0
-
-#####################################################################
-# Lastly, run any migrations, if needed.
-MODULESTORE = convert_module_store_setting_if_needed(MODULESTORE)
-
-# Dummy secret key for dev
-SECRET_KEY = '85920908f28904ed733fe576320db18cabd7b6cd'
