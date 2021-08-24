@@ -168,10 +168,10 @@ CREDENTIALS_INTERNAL_SERVICE_URL: http://localhost:8005
 CREDENTIALS_PUBLIC_SERVICE_URL: http://localhost:8005
 CREDIT_HELP_LINK_URL: ''
 CREDIT_PROVIDER_SECRET_KEYS: {}
-CROSS_DOMAIN_CSRF_COOKIE_DOMAIN: '.edxdemo.site'
+CROSS_DOMAIN_CSRF_COOKIE_DOMAIN: edxdemo.site
 CROSS_DOMAIN_CSRF_COOKIE_NAME: 'edxvn'
 CSRF_COOKIE_SECURE: true
-CSRF_TRUSTED_ORIGINS: ['https://edxdemo.site', 'https://studio.edxdemo.site']
+CSRF_TRUSTED_ORIGINS: ['https://www.edxdemo.site', 'https://studio.edxdemo.site']
 DASHBOARD_COURSE_LIMIT: null
 DATABASES:
     default:
@@ -292,7 +292,7 @@ FEATURES:
     ENABLE_SPECIAL_EXAMS: false
     ENABLE_THIRD_PARTY_AUTH: true
     ENABLE_VIDEO_UPLOAD_PIPELINE: false
-    PREVIEW_LMS_BASE: edxdemo.site
+    PREVIEW_LMS_BASE: www.edxdemo.site
     SHOW_FOOTER_LANGUAGE_SELECTOR: true
     SHOW_HEADER_LANGUAGE_SELECTOR: true
 FEEDBACK_SUBMISSION_EMAIL: ''
@@ -346,9 +346,9 @@ LANGUAGE_CODE: en
 LANGUAGE_COOKIE: openedx-language-preference
 LEARNER_PORTAL_URL_ROOT: https://learner-portal-edxdemo.site
 LEARNING_MICROFRONTEND_URL: null
-LMS_BASE: edxdemo.site
-LMS_INTERNAL_ROOT_URL: http://edxdemo.site
-LMS_ROOT_URL: http://edxdemo.site
+LMS_BASE: www.edxdemo.site
+LMS_INTERNAL_ROOT_URL: http://www.edxdemo.site
+LMS_ROOT_URL: http://www.edxdemo.site
 LOCAL_LOGLEVEL: INFO
 LOGGING_ENV: sandbox
 LOGIN_REDIRECT_WHITELIST: []
@@ -497,9 +497,9 @@ RETIREMENT_STATES:
 SECRET_KEY: DUMMY KEY ONLY FOR TO DEVSTACK
 SEGMENT_KEY: null
 SERVER_EMAIL: devops@edxdemo.site
-SESSION_COOKIE_DOMAIN: '.edxdemo.site'
+SESSION_COOKIE_DOMAIN: edxdemo.site
 SESSION_COOKIE_NAME: sessionid
-SESSION_COOKIE_SECURE: false
+SESSION_COOKIE_SECURE: true
 SESSION_SAVE_EVERY_REQUEST: false
 SITE_NAME: edxdemo.site
 SOCIAL_AUTH_OAUTH_SECRETS: ''
