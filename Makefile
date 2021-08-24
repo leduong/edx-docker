@@ -271,6 +271,18 @@ generate-passwords:  ## stop the development servers
 	done < /tmp/passwords-template.yml > ./edxapp/etc/passwords.yml
 .PHONY: generate-passwords
 
+# Force archive download:
+fetch-release: \
+  check-activate \
+  check-root-user
+fetch-release:  ## fetch openedx release sources
+	@echo "🎉 Downloading release '$(EDX_RELEASE_REF)' to edxapp/edx-platform/"
+	@rm -fr edxapp/edx-platform
+	curl -sLo edxapp.tgz ${EDX_ARCHIVE_URL} && tar xzf edxapp.tgz && rm -fr edxapp.tgz
+	@mv edx-platform-open-release-lilac.master ./edxapp/edx-platform
+
+.PHONY: fetch-release
+
 superuser: \
   check-activate
 superuser: ## Create an admin user with password "admin"
