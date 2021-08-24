@@ -235,7 +235,8 @@ run-ssl:  ## start the cms and lms services over TLS (nginx + production image)
 	$(WAIT_DB)
 	$(COMPOSE_RUN) dockerize -wait tcp://cms:8000 -timeout 60s
 	$(COMPOSE_RUN) dockerize -wait tcp://lms:8000 -timeout 60s
-	$(COMPOSE_RUN) dockerize -wait tcp://nginx:80 -timeout 60s
+	$(COMPOSE_RUN) dockerize -wait tcp://nginx:18010 -timeout 60s
+	$(COMPOSE_RUN) dockerize -wait tcp://nginx:18000 -timeout 60s
 .PHONY: run-ssl
 
 stop:  ## stop the development servers
